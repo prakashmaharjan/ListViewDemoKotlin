@@ -1,72 +1,79 @@
 package com.example.prakashmaharjan.listviewdemo
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.ListView
-
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
+import com.example.prakashmaharjan.listviewdemo.databinding.ActivityMainBinding
+import com.example.prakashmaharjan.listviewdemo.databinding.RowMainBinding
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+    private val viewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setUpListView()
+        enableEdgeToEdge()
+        
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        setSupportActionBar(binding.toolbar)
+
+        setupListView()
+        handleInsets()
     }
 
-    private fun setUpListView() {
-        val listView = findViewById<ListView>(R.id.myListView)
-        listView.adapter = MyCustomAdapter()
+    private fun setupListView() {
+        val adapter = AndroidVersionAdapter(viewModel.getAndroidVersions())
+        binding.myListView.adapter = adapter
     }
 
+    private fun handleInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.updatePadding(left = systemBars.left, right = systemBars.right)
 
-    private class MyCustomAdapter : BaseAdapter() {
-
-        private val androidVersionsArray = arrayListOf(
-                "Android 1.0", "Android 1.1 (Petit Four)", "Android 1.5 (Cupcake)", "Android 1.6 (Donut)", "Android 2.0 (Eclair)", "Android 2.2 (Froyo)", "Android 2.3 (Gingerbread)", "Android 3.0 (Honeycomb)", "Android 4.0 (Ice Cream Sandwich)", "Android 4.1 (Jelly Bean)", "Android 4.4 (Kitkat)", "Android 5.0 (Lollipop)", "Android 6.0 (Marshmallow)", "Android 7.0 (Nougat)", "Android 8.0 (Oreo)", "Android 9.0 (Pie)", "Android 10 (Quince Tart)", "Android 11 (Red Velvet Cake)", "Android 12 (Snow Cone)",
-                    "Android 12L (Snow Cone v2)", "Android 13 (Tiramisu)", "Android 14 (Upside Down Cake)", "Android 15 (Vanilla Ice Cream)"
-        )
-        private val androidAPILevelsArray = arrayListOf(
-                "API 1", "API 2", "API 3", "API 4", "API 5", "API 8", "API 9", "API 11", "API 14", "API 16", "API 19", "API 21", "API 23", "API 24", "API 26", "API 28", "API 29", "API 30", "API 31", "API 32", "API 33", "API 34", "TBA"
-        )
-
-        override fun getCount(): Int {
-            //no of rows
-            return androidVersionsArray.size
-
+            // Fix: Apply top inset to the toolbar to prevent overlap with status bar
+            binding.toolbar.updatePadding(top = systemBars.top)
+            
+            // Handle bottom navigation bar for the list view
+            binding.myListView.updatePadding(bottom = systemBars.bottom)
+            
+            insets
         }
+    }
 
-        override fun getItemId(position: Int): Long {
-            return position.toLong()
-        }
+    private class AndroidVersionAdapter(private val versions: List<AndroidVersion>) : BaseAdapter() {
+        override fun getCount(): Int = versions.size
+        override fun getItem(position: Int): Any = versions[position]
+        override fun getItemId(position: Int): Long = position.toLong()
 
-        override fun getItem(position: Int): Any {
-            return ""
-        }
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val binding: RowMainBinding
+            val view: View
 
-        override fun getView(position: Int, convertView: View?, viewGroup: ViewGroup?): View {
-            val rowMain: View
             if (convertView == null) {
-                val layoutInflater = LayoutInflater.from(viewGroup!!.context)
-                rowMain = layoutInflater.inflate(R.layout.row_main, viewGroup, false)
-                val versionTextV: TextView = rowMain.findViewById(R.id.version_textLabel)
-                val apiTextV: TextView = rowMain.findViewById(R.id.api_textLabel)
-                val viewHolder = ViewHolder(versionTextV, apiTextV)
-                rowMain.tag = viewHolder
+                binding = RowMainBinding.inflate(android.view.LayoutInflater.from(parent?.context), parent, false)
+                view = binding.root
+                view.tag = binding
             } else {
-                rowMain = convertView
+                binding = convertView.tag as RowMainBinding
+                view = convertView
             }
 
-            val viewHolder = rowMain.tag as ViewHolder
-            viewHolder.nameTextView.text = androidVersionsArray[position]
-            viewHolder.apiTextView.text = androidAPILevelsArray[position]
-            return rowMain
+            val item = versions[position]
+            binding.versionTextLabel.text = item.name
+            binding.apiTextLabel.text = parent?.context?.getString(R.string.api_level, item.apiLevel)
+
+            return view
         }
-
-        private class ViewHolder(val nameTextView: TextView, val apiTextView: TextView)
-
     }
 }

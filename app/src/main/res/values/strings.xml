@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">ListViewDemo</string>
+    <string name="app_name">AndroidVersions</string>
+    <string name="list_view_demo">Android Versions</string>
+    <string name="api_level">API Level %1$d</string>
 </resources>
