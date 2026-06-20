@@ -2,7 +2,7 @@
 
 
 
-This is an simple List View in Android Kotlin. It shows the list of all androidOS versionm and API level.
+This is an simple List View in Android Kotlin. It shows the list of all androidOS version and respective API level.
 
 Installation
 
